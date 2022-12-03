@@ -54,6 +54,42 @@ pub fn process_part1(input: &str) -> u32 {
     result
 }
 
+pub fn process_part2(input: &str) -> u32 {
+    let result = input
+        .lines()
+        .map(|line| {
+            let moves: Vec<&str> = line.split(" ").collect();
+            let opponent_move = moves[0].parse::<Move>().unwrap();
+            match moves[1] {
+                "X" => {
+                    let required_move = match opponent_move {
+                        Move::Rock => Move::Scissors,
+                        Move::Paper => Move::Rock,
+                        Move::Scissors => Move::Paper,
+                    };
+                    0 + required_move as u32
+                }
+                "Y" => 3 + opponent_move as u32,
+
+                "Z" => {
+                    let required_move = match opponent_move {
+                        Move::Rock => Move::Paper,
+                        Move::Paper => Move::Scissors,
+                        Move::Scissors => Move::Rock,
+                    };
+                    6 + required_move as u32
+                }
+
+                _ => {
+                    panic!("unexpected response")
+                }
+            }
+        })
+        .sum::<u32>();
+
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -66,5 +102,11 @@ C Z";
     fn part1_works() {
         let result = process_part1(&INPUT);
         assert_eq!(result, 15);
+    }
+
+    #[test]
+    fn part2_works() {
+        let result = process_part2(&INPUT);
+        assert_eq!(result, 12);
     }
 }
