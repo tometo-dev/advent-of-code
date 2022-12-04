@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, str::FromStr};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 enum Move {
     Rock = 1,
     Paper = 2,
