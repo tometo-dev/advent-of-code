@@ -110,6 +110,31 @@ pub fn process_part1(input: &str) -> String {
     top_crates
 }
 
+pub fn process_part2(input: &str) -> String {
+    let (_, (mut crates, moves)) = crates(input).unwrap();
+
+    for Move { number, from, to } in moves.iter() {
+        let len = crates[*from as usize].len();
+        for crate_ in crates[*from as usize]
+            .drain((len - (*number as usize))..)
+            .collect::<Vec<&str>>()
+            .iter()
+        {
+            crates[*to as usize].push(crate_);
+        }
+    }
+
+    let top_crates: String = crates
+        .iter()
+        .map(|c| match c.iter().last() {
+            Some(c) => c,
+            None => "",
+        })
+        .collect();
+
+    top_crates
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -128,5 +153,11 @@ move 1 from 1 to 2";
     fn part1_works() {
         let result = process_part1(&INPUT);
         assert_eq!(result, "CMZ");
+    }
+
+    #[test]
+    fn part2_works() {
+        let result = process_part2(&INPUT);
+        assert_eq!(result, "MCD");
     }
 }
