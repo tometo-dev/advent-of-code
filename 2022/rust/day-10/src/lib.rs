@@ -47,6 +47,9 @@ pub fn process_part1(input: &str) -> String {
     let mut signal_strength = 0;
 
     for i in 1..=MAX_CYCLES {
+        if interested_cycles.iter().any(|&c| c == i) {
+            signal_strength += (i as i32) * X;
+        }
         if cmd_remaining_cycles == 0 {
             let next_cmd = ops[current_ops_index];
             match next_cmd {
@@ -64,10 +67,6 @@ pub fn process_part1(input: &str) -> String {
             to_be_added = 0;
             cmd_remaining_cycles = 0;
             current_ops_index += 1;
-        }
-
-        if interested_cycles.iter().any(|&c| c == i) {
-            signal_strength += (i as i32) * X;
         }
     }
 
@@ -275,7 +274,7 @@ noop";
     #[test]
     fn part1_works() {
         let result = process_part1(&INPUT);
-        assert_eq!(result, "13360");
+        assert_eq!(result, "13140");
     }
     #[test]
     fn part2_works() {
