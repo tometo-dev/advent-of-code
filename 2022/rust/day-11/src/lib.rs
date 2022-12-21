@@ -102,7 +102,11 @@ fn parse_monkey(input: &str) -> IResult<&str, Monkey> {
 
 impl Monkey {
     /// Inspects the items and returns the current worry level (i.e. next item)
-    fn inspect(&mut self) -> u64 {
+    /// # Arguments
+    /// * `relieved_after_inspect` - flag denoting if the worry level decreases after monkey's inspection
+    /// * `lcm` - LCM of the divisors of all the monkeys.
+    ///         Uses [Chinese remainder theorem](https://en.wikipedia.org/wiki/Chinese_remainder_theorem) to keep the worry level from overflowing
+    fn inspect(&mut self, relieved_after_inspect: bool, lcm: u64) -> u64 {
         self.touch_count += 1;
 
         let current_item = self.items.pop_front().unwrap();
@@ -119,7 +123,7 @@ impl Monkey {
                     Operand::Num(num) => *num,
                 };
 
-                op_1 + op_2
+                (op_1 + op_2) % lcm
             }
             Operation::Mul(a, b) => {
                 let op_1 = match a {
@@ -132,11 +136,15 @@ impl Monkey {
                     Operand::Num(num) => *num,
                 };
 
-                op_1 * op_2
+                (op_1 * op_2) % lcm
             }
         };
 
-        worry_level / 3
+        if relieved_after_inspect {
+            worry_level / 3
+        } else {
+            worry_level
+        }
     }
 
     /// Takes the current worry level and returns the recipient for the current item
@@ -152,11 +160,16 @@ impl Monkey {
 pub fn process_part1(input: &str) -> String {
     let (_, mut monkeys) = separated_list1(multispace1, parse_monkey)(input).unwrap();
 
+    let lcm = monkeys
+        .iter()
+        .map(|monkey| monkey.test.divisor)
+        .product::<u64>();
+
     for _round in 0..20 {
         for monkey_index in 0..monkeys.len() {
             for _ in 0..monkeys[monkey_index].items.len() {
                 let current_monkey = monkeys.get_mut(monkey_index).unwrap();
-                let item = current_monkey.inspect();
+                let item = current_monkey.inspect(true, lcm);
                 let next_monkey_index = current_monkey.test(item);
 
                 monkeys
@@ -180,7 +193,38 @@ pub fn process_part1(input: &str) -> String {
 }
 
 pub fn process_part2(input: &str) -> String {
-    42.to_string()
+    let (_, mut monkeys) = separated_list1(multispace1, parse_monkey)(input).unwrap();
+
+    let lcm = monkeys
+        .iter()
+        .map(|monkey| monkey.test.divisor)
+        .product::<u64>();
+
+    for _round in 0..10000 {
+        for monkey_index in 0..monkeys.len() {
+            for _ in 0..monkeys[monkey_index].items.len() {
+                let current_monkey = monkeys.get_mut(monkey_index).unwrap();
+                let item = current_monkey.inspect(false, lcm);
+                let next_monkey_index = current_monkey.test(item);
+
+                monkeys
+                    .get_mut(next_monkey_index as usize)
+                    .unwrap()
+                    .items
+                    .push_back(item);
+            }
+        }
+    }
+
+    monkeys.sort_by_key(|monkey| monkey.touch_count);
+
+    monkeys
+        .iter()
+        .map(|monkey| monkey.touch_count)
+        .rev()
+        .take(2)
+        .product::<u64>()
+        .to_string()
 }
 
 #[cfg(test)]
@@ -196,9 +240,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+
     fn part2_works() {
-        let result = process_part1(&INPUT);
-        assert_eq!(result, "42");
+        let result = process_part2(&INPUT);
+        assert_eq!(result, "2713310158");
     }
 }
